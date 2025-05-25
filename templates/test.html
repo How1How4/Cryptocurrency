@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>加密貨幣價格圖表</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='test.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="header">
+        <h2>加密貨幣歷史價格圖表</h2>
+        <p id="us"></p>
+        <button onclick="SEARCH()" style="right: 170px;">訂單</button>
+        <button onclick="POSITION()" style="right: 90px;">持倉</button>
+        <button onclick="window.location.href = 'http://127.0.0.1:5000/login';" style="right: 10px;">登入</button>
+    </div>
+
+    <div class="tab-container">
+        <button class="tab-button active" onclick="selectTab(1)">BTC</button>
+        <button class="tab-button" onclick="selectTab(2)">ETH</button>
+        <button class="tab-button" onclick="selectTab(3)">SOL</button>
+    </div>
+
+    <div id="tab-content" class="tab-content">
+        <label for="rangeSelect">時間：</label>
+        <select id="rangeSelect">
+            <option value="1">近 1 天</option>
+            <option value="7">近 7 天</option>
+            <option value="30">近 30 天</option>
+        </select>
+        <canvas id="priceChart" width="800" height="400"></canvas>
+
+        <div id="infoimg" style="background-color: #1850d1; padding: 20px; color:white"></div>
+    </div>
+
+    <script>
+        const ctx = document.getElementById('priceChart').getContext('2d');
+        let chart;
+        const user = localStorage.getItem("user");
+        const username = localStorage.getItem("name");
+
+        if (username) {
+            document.getElementById('us').innerText = `使用者，${username}`;
+        }
+
+        function SEARCH() {
+            if (user) {
+                window.location.href = 'http://127.0.0.1:5000/transaction'
+            } else {
+                alert("請登入");
+                window.location.href = "http://127.0.0.1:5000/login";
+            }
+        }
+
+        function POSITION() {
+            if (user) {
+                window.location.href = 'http://127.0.0.1:5000/position'
+            } else {
+                alert("請登入");
+                window.location.href = "http://127.0.0.1:5000/login";
+            }
+        }
+
+        function BUY() {
+            if (user) {
+                handleTrade(1);
+            } else {
+                alert("請登入");
+                window.location.href = "http://127.0.0.1:5000/login";
+            }
+        }
+
+        function SELL() {
+            if (user) {
+                handleTrade(-1);
+            } else {
+                alert("請登入");
+                window.location.href = "http://127.0.0.1:5000/login";
+            }
+        }
+
+        function handleTrade(tradeType) {
+            const currencyid = document.getElementById("transaction").value;
+            const priceStr = document.getElementById("priceInput").value;
+            const quantityStr = document.getElementById("quantityInput").value;
+
+            const price = parseFloat(priceStr);
+            const quantity = parseFloat(quantityStr);
+
+            if (!priceStr || isNaN(price) || price <= 0) {
+                alert("請輸入有效的價格");
+                return;
+            }
+
+            if (!quantityStr || isNaN(quantity) || quantity <= 0) {
+                alert("請輸入有效的數量");
+                return;
+            }
+
+            fetch('http://localhost:5000/api/transaction', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    id: currencyid,
+                    price: price,
+                    quantity: quantity,
+                    trade: tradeType,
+                    user: user
+                })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    alert(data.message + '\n' + data.log);
+                    document.getElementById("priceInput").value = "";
+                    document.getElementById("quantityInput").value = "";
+                })
+                .catch(err => {
+                    console.error("發生錯誤：", err);
+                    alert("交易失敗，請稍後再試。");
+                });
+        }
+
+        let currentRange = 1;
+
+        async function fetchAndDraw(currencyId, range) {
+            currentRange = range;
+            const res = await fetch(`http://localhost:5000/api/price?id=${currencyId}&range=${range}`);
+            const data = await res.json();
+
+            const rawData = data.map(d => ({
+                date: new Date(d.timestamp),   // 保留為 Date 物件
+                price: d.price
+            }));
+
+            const labels = rawData.map(d => {
+                const m = d.date.getMonth() + 1;
+                const day = d.date.getDate();
+                const hour = d.date.getHours().toString().padStart(2, '0');
+                const min = d.date.getMinutes().toString().padStart(2, '0');
+                return `${m}/${day} ${hour}:${min}`;
+            });
+
+            const prices = rawData.map(d => d.price);
+
+
+            if (chart) chart.destroy();
+
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '價格',
+                        data: prices,
+                        borderColor: 'blue',
+                        backgroundColor: 'rgba(0, 0, 255, 0.1)',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: { title: { display: true, text: '時間' } },
+                        y: { title: { display: true, text: '價格USD' } }
+                    }
+                }
+            });
+        }
+
+        document.getElementById('rangeSelect').addEventListener('change', () => {
+            const activeId = document.querySelector('.tab-button.active').innerText;
+            const idMap = { BTC: 1, ETH: 2, SOL: 3 };
+            const selectedId = idMap[activeId];
+            fetchAndDraw(selectedId, document.getElementById('rangeSelect').value);
+        });
+
+        function selectTab(tabId) {
+            const buttons = document.querySelectorAll('.tab-button');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            buttons[tabId - 1].classList.add('active');
+            const info = document.getElementById("infoimg");
+            const content = document.getElementById('tab-content');
+
+
+            switch (tabId) {
+                case 1:
+                    content.style.backgroundColor = '#f5f5f5'; 
+                    info.innerHTML = `
+                            <div class="crypto-info">
+                                <img src="/static/btc.png" alt="BTC logo">
+
+                                <ul>
+                                    <p><strong>比特幣（Bitcoin, BTC）</strong></p>
+                                    <li>推出年份：2009 年</li>
+                                    <li>創辦人：中本聰（Satoshi Nakamoto）</li>
+                                    <li>定位：數位黃金、去中心化貨幣</li>
+                                    <li>核心用途：價值儲存、支付</li>
+                                    <li>共識機制：工作量證明（PoW）</li>
+                                    <li>交易速度：約 7 筆／秒</li>
+                                    <li>交易手續費：高（動輒數美元以上）</li>
+                                    <li>總供應量：2,100 萬枚（固定）</li>
+                                    <li>生態系統成熟度：穩定，應用有限</li>
+                                    <li>去中心化程度：高</li>
+                                    <li>安全性：非常高（但資源消耗大）</li>
+                                    <li>法規風險：高（可能被定義為商品）</li>
+                                </ul>
+
+                                <div class="trade-box">
+                                    <label for="transaction">交易幣種：</label>
+                                    <select id="transaction">
+                                        <option value="1">BTC</option>
+                                        <option value="2">ETH</option>
+                                        <option value="3">SOL</option>
+                                    </select>
+                                    <input type="text" placeholder="usd" id="priceInput" />
+                                    <input type="text" placeholder="quantity" id="quantityInput" />
+                                    <button onclick="BUY()">BUY</button>
+                                    <button onclick="SELL()">SELL</button>
+                                </div>
+                            </div>`;
+                    break;
+                case 2:
+                    content.style.backgroundColor = '#e0f7fa';
+                    info.innerHTML = `
+                            <div class="crypto-info">
+                                <img src="/static/eth.png" alt="ETH logo">
+
+                                <ul>
+                                    <p><strong>以太幣（Ethereum, ETH）</strong></p>
+                                    <li>推出年份：2015 年</li>
+                                    <li>創辦人：Vitalik Buterin 等人</li>
+                                    <li>定位：智能合約平台與應用生態的燃料</li>
+                                    <li>核心用途：執行智能合約、DApp、DeFi、NFT</li>
+                                    <li>共識機制：權益證明（PoS，The Merge 後）</li>
+                                    <li>交易速度：約 30 筆／秒</li>
+                                    <li>交易手續費：中等（通常 < 1 美元）</li>
+                                    <li>總供應量：無上限，但有銷毀機制</li>
+                                    <li>生態系統成熟度：非常成熟</li>
+                                    <li>去中心化程度：高（但節點門檻高）</li>
+                                    <li>安全性：高（能源效率改善）</li>
+                                    <li>法規風險：高（可能被視為證券）</li>
+                                </ul>
+
+                                <div class="trade-box">
+                                    <label for="transaction">交易幣種：</label>
+                                    <select id="transaction">
+                                        <option value="1">BTC</option>
+                                        <option value="2">ETH</option>
+                                        <option value="3">SOL</option>
+                                    </select>
+                                    <input type="text" placeholder="usd" id="priceInput" />
+                                    <input type="text" placeholder="quantity" id="quantityInput" />
+                                    <button onclick="BUY()">BUY</button>
+                                    <button onclick="SELL()">SELL</button>
+                                </div>
+                            </div>`;
+                    break;
+                case 3:
+                    content.style.backgroundColor = '#fff3e0';
+                    info.innerHTML = `
+                            <div class="crypto-info">
+                                <img src="/static/sol.png" alt="SOL logo">
+                                <ul>
+                                    <p><strong>Solana（SOL）</strong></p>
+                                    <li>推出年份：2020 年</li>
+                                    <li>創辦人：Anatoly Yakovenko、Raj Gokal</li>
+                                    <li>定位：高速低成本智能合約平台</li>
+                                    <li>核心用途：DeFi、NFT、遊戲、即時應用</li>
+                                    <li>共識機制：PoH + DPoS</li>
+                                    <li>交易速度：理論上可達 65,000 筆／秒</li>
+                                    <li>交易手續費：極低（約 $0.00025）</li>
+                                    <li>總供應量：約 5.5 億枚，通膨可控</li>
+                                    <li>生態系統成熟度：積極擴張中</li>
+                                    <li>去中心化程度：中等（節點集中）</li>
+                                    <li>安全性：中等（曾多次中斷）</li>
+                                    <li>法規風險：高（被美 SEC 點名）</li>
+                                </ul>
+                                <div class="trade-box">
+                                    <label for="transaction">交易幣種：</label>
+                                    <select id="transaction">
+                                        <option value="1">BTC</option>
+                                        <option value="2">ETH</option>
+                                        <option value="3">SOL</option>
+                                    </select>
+                                    <input type="text" placeholder="usd" id="priceInput" />
+                                    <input type="text" placeholder="quantity" id="quantityInput" />
+                                    <button onclick="BUY()">BUY</button>
+                                    <button onclick="SELL()">SELL</button>
+                                </div>
+                            </div>`;
+                    break;
+            }
+
+            // 加上這行：每次切換幣種就刷新圖表
+            fetchAndDraw(tabId, currentRange);
+        }
+
+        selectTab(1);
+        fetchAndDraw(1, 1);
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
