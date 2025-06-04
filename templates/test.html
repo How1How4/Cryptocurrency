@@ -129,6 +129,7 @@
             const res = await fetch(`http://localhost:5000/api/price?id=${currencyId}&range=${range}`);
             const data = await res.json();
 
+<<<<<<< HEAD
             const rawData = data.map(d => ({
                 date: new Date(d.timestamp),   // 保留為 Date 物件
                 price: d.price
@@ -143,6 +144,22 @@
             });
 
             const prices = rawData.map(d => d.price);
+=======
+            const rawData = data.map(d => ({
+                date: new Date(d.timestamp),   // 保留為 Date 物件
+                price: d.price
+            }));
+
+            const labels = rawData.map(d => {
+                const m = d.date.getMonth() + 1;
+                const day = d.date.getDate();
+                const hour = d.date.getHours().toString().padStart(2, '0');
+                const min = d.date.getMinutes().toString().padStart(2, '0');
+                return `${m}/${day} ${hour}:${min}`;
+            });
+
+            const prices = rawData.map(d => d.price);
+>>>>>>> 70f05f803971e82a15c9e4159a3e59b4e65c5657
 
 
             if (chart) chart.destroy();

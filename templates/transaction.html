@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ﻿<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -96,3 +97,103 @@
     </script>
 </body>
 </html>
+=======
+﻿<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>加密貨幣交易紀錄</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='transaction.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="record-container">
+        <h2>加密貨幣交易紀錄</h2>
+
+        <label for="currencySelect">幣種：</label>
+        <select id="currencySelect">
+            <option value="1">BTC</option>
+            <option value="2">ETH</option>
+            <option value="3">SOL</option>
+        </select>
+
+        <label for="rangeSelect">時間：</label>
+        <select id="rangeSelect">
+            <option value="1">近 1 天</option>
+            <option value="7">近 7 天</option>
+            <option value="30">近 30 天</option>
+        </select>
+
+        <button onclick="SEARCH()">查詢</button>
+        <p id="us"></p>
+        <div id="result"></div>
+    </div>
+
+    <button class="home-button" onclick="window.location.href = 'http://127.0.0.1:5000';">首頁</button>
+
+    <script>
+        const username = localStorage.getItem("name");
+        if (username) {
+            document.getElementById('us').innerText = `使用者：${username}`;
+        }
+
+        function SEARCH() {
+            const user = localStorage.getItem("user");
+            const currencyid = document.getElementById('currencySelect').value;
+            const range = document.getElementById('rangeSelect').value;
+
+            fetch('http://localhost:5000/api/search', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    id: currencyid,
+                    time: range,
+                    user: user
+                })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    const resultDiv = document.getElementById('result');
+                    if (data.message === "查詢成功！") {
+                        let html = `
+                            <h3>查詢結果</h3>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>幣種</th>
+                                        <th>交易類型</th>
+                                        <th>數量</th>
+                                        <th>價格 (USD)</th>
+                                        <th>總價值 (USD)</th>
+                                        <th>盈虧 (USD)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                        `;
+                        data.data.forEach(item => {
+                            html += `
+                                <tr>
+                                    <td>${item.currency}</td>
+                                    <td>${item.type}</td>
+                                    <td>${item.quantity}</td>
+                                    <td>${item.price}</td>
+                                    <td>${item.total}</td>
+                                    <td>${item.profitloss}</td>
+                                </tr>`;
+                        });
+                        html += `</tbody></table>`;
+                        resultDiv.innerHTML = html;
+                    } else {
+                        resultDiv.innerHTML = `<p style="color:red;">錯誤：${data.message}</p>`;
+                    }
+                })
+                .catch(err => {
+                    console.error("發生錯誤：", err);
+                });
+        }
+    </script>
+</body>
+</html>
+>>>>>>> 70f05f803971e82a15c9e4159a3e59b4e65c5657

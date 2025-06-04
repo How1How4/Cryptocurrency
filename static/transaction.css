@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 body {
     margin: 0;
     padding: 0;
@@ -163,3 +164,170 @@ table tr:nth-child(even) {
 }
 
 
+=======
+body {
+    margin: 0;
+    padding: 0;
+    font-family: sans-serif;
+    background-color: #f0f8ff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.record-container {
+    background-color: #fff;
+    padding: 30px 40px;
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    width: 420px;
+}
+
+.record-container h2 {
+    color: mediumblue;
+    margin-bottom: 20px;
+}
+
+.record-container label {
+    display: block;
+    margin-top: 10px;
+    text-align: left;
+    font-weight: bold;
+    color: #333;
+}
+
+.record-container select {
+    width: 100%;
+    padding: 8px;
+    font-size: 14px;
+    border-radius: 6px;
+    border: 1px solid #aaa;
+    margin-bottom: 10px;
+}
+
+.record-container button {
+    width: 100%;
+    padding: 10px;
+    background-color: #003C9D;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-top: 10px;
+    transition: 0.3s;
+}
+
+.record-container button:hover {
+    background-color: white;
+    color: #003C9D;
+    border: 1px solid #003C9D;
+}
+
+#us {
+    margin-top: 10px;
+    font-weight: bold;
+    color: #444;
+}
+
+#result {
+    margin-top: 20px;
+    text-align: left;
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    font-size: 14px;
+}
+
+table th, table td {
+    border: 1px solid #aaa;
+    padding: 8px;
+    text-align: center;
+}
+
+table th {
+    background-color: #003C9D;
+    color: white;
+}
+
+table tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+.home-button {
+    position: fixed;
+    width: 75px;
+    height: 50px;
+    top: 10px;
+    right: 10px;
+    background-color: #003C9D;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.home-button:hover {
+    background-color: white;
+    color: #003C9D;
+    border: 1px solid #003C9D;
+}
+
+
+@media (max-width: 768px) {
+    body {
+        flex-direction: column;
+        padding-top: 60px; /* 預留給固定在右上的 home-button */
+        height: auto;
+    }
+
+    .record-container {
+        width: 90%;
+        padding: 20px;
+        margin-top: 20px;
+    }
+
+    .home-button {
+        width: 60px;
+        height: 40px;
+        font-size: 12px;
+        top: 10px;
+        right: 10px;
+        z-index: 1000;
+    }
+
+    table {
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 480px) {
+    .record-container h2 {
+        font-size: 20px;
+    }
+
+    .record-container select,
+    .record-container button {
+        font-size: 13px;
+    }
+
+    table th, table td {
+        padding: 6px;
+    }
+
+    .home-button {
+        width: 55px;
+        height: 38px;
+        font-size: 11px;
+    }
+}
+
+
+>>>>>>> 70f05f803971e82a15c9e4159a3e59b4e65c5657
