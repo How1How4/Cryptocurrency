@@ -1,0 +1,66 @@
+﻿<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>加密貨幣持倉</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='position.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="position-container">
+        <h2>加密貨幣持倉</h2>
+        <label for="currencySelect">幣種：</label>
+        <select id="currencySelect">
+            <option value="1">BTC</option>
+            <option value="2">ETH</option>
+            <option value="3">SOL</option>
+        </select>
+        <button onclick="SEARCH()">查詢</button>
+        <p id="us"></p>
+        <div id="result"></div>
+    </div>
+
+    <button class="home-button" onclick="window.location.href = 'http://127.0.0.1:5000';">首頁</button>
+
+    <script>
+        const username = localStorage.getItem("name");
+        if (username) {
+            document.getElementById('us').innerText = `使用者：${username}`;
+        }
+
+        function SEARCH() {
+            const user = localStorage.getItem("user");
+            const currencyid = document.getElementById('currencySelect').value;
+
+            fetch('http://localhost:5000/api/position', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    id: currencyid,
+                    user: user
+                })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    const resultDiv = document.getElementById('result');
+                    if (data.message === "查詢成功！") {
+                        resultDiv.innerHTML = `
+                            <h3>查詢結果</h3>
+                            <p><strong>幣種：</strong>${data.currency}</p>
+                            <p><strong>均價：</strong>${data.price}</p>
+                            <p><strong>數量：</strong>${data.quantity}</p>
+                            <p><strong>總價值：</strong>${data.total} USD</p>
+                        `;
+                    } else {
+                        resultDiv.innerHTML = `<p style="color:red;">錯誤：${data.message}</p>`;
+                    }
+                })
+                .catch(err => {
+                    console.error("發生錯誤：", err);
+                });
+        }
+    </script>
+</body>
+</html>

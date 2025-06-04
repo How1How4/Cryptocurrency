@@ -1,0 +1,71 @@
+﻿<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>登入</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='login.css') }}">
+</head>
+<body>
+    <div class="login-container">
+        <h2>登入</h2>
+        <p>使用者</p>
+        <input type="text" placeholder="user name" id="userInput" />
+        <p>密碼</p>
+        <input type="password" placeholder="password" id="passwordInput" />
+        <button onclick="LOGIN()">登入</button>
+        <button onclick="REGISTER()">註冊</button>
+    </div>
+
+    <script>
+        function LOGIN() {
+            USER(1);  // 1 表示登入
+        }
+
+        function REGISTER() {
+            USER(-1); // -1 表示註冊
+        }
+
+        function USER(loginType) {
+            const user = document.getElementById("userInput").value;
+            const password = document.getElementById("passwordInput").value;
+
+            if (user === "") {
+                alert("請輸入有效使用者");
+                return;
+            }
+
+            if (password === "") {
+                alert("請輸入有效密碼");
+                return;
+            }
+
+            fetch('http://localhost:5000/api/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    user: user,
+                    password: password,
+                    logintype: loginType
+                })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    alert(data.message);
+                    if (data.message === "登入成功！") {
+                        localStorage.setItem("user", data.userid);
+                        localStorage.setItem("name", user);
+                        window.location.href = 'http://127.0.0.1:5000';
+                    }
+                })
+                .catch(err => {
+                    document.getElementById("userInput").value = "";
+                    document.getElementById("passwordInput").value = "";
+                    console.error("發生錯誤：", err);
+                    alert("登入失敗，請稍後再試。");
+                });
+        }
+    </script>
+</body>
+</html>
