@@ -5,7 +5,7 @@ import db_table_build as dtb
 
 db.dbuild()
 dtb.dtbuild()
-dg.add_history_price(30)
+dg.add_history_price(40)
 
 
 
